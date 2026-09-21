@@ -1,0 +1,1900 @@
+ <!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NexusX Forex & Binary Options Trading Terminal</title>
+    
+    <!-- Mobile App & PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexusX Trade">
+    <meta name="theme-color" content="#07090e">
+    <meta name="description" content="Production-ready Forex and Binary Options Web & Mobile Trading Terminal">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#07090e',
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f293d',
+                            600: '#374151'
+                        },
+                        brand: {
+                            green: '#10b981',
+                            red: '#ef4444',
+                            accent: '#3b82f6',
+                            purple: '#8b5cf6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide & FontAwesome Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #07090e; 
+            color: #f3f4f6;
+            touch-action: manipulation;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass { background: rgba(17, 24, 39, 0.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-panel { background: rgba(31, 41, 61, 0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #07090e; }
+        ::-webkit-scrollbar-thumb { background: #1f293d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #374151; }
+
+        /* Mobile safe areas for modern phones */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 12px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+
+        /* Animation utilities */
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 0.4; }
+        }
+        .animate-pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col antialiased select-none bg-dark-950 text-gray-100">
+
+    <!-- TOP NAVBAR -->
+    <header class="h-14 glass border-b border-gray-800/80 px-3 sm:px-4 flex items-center justify-between z-30 shrink-0 pt-safe">
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <div class="flex items-center space-x-1.5 sm:space-x-2 text-blue-500 font-bold text-base sm:text-lg tracking-wider">
+                <i data-lucide="candlestick-chart" class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400"></i>
+                <span class="bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent font-extrabold tracking-tight">NEXUS<span class="text-emerald-400">X</span></span>
+            </div>
+            <span class="hidden md:inline-block text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono font-medium">PRO v3.0 PWA</span>
+            
+            <!-- Asset Selector -->
+            <div class="relative ml-1 sm:ml-2">
+                <button id="assetSelectorBtn" class="flex items-center space-x-1.5 sm:space-x-2 bg-dark-800/90 hover:bg-dark-700 px-2.5 py-1.5 rounded-lg border border-gray-700/60 text-xs font-medium transition">
+                    <span id="currentAssetPair" class="font-bold text-white font-mono">EUR/USD</span>
+                    <span id="currentAssetBadge" class="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">FOREX</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400"></i>
+                </button>
+                <div id="assetDropdown" class="hidden absolute top-full left-0 mt-2 w-56 sm:w-60 glass rounded-xl shadow-2xl border border-gray-800 py-2 z-50">
+                    <div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Forex Pairs</div>
+                    <div class="asset-option px-3 py-2 hover:bg-dark-700/80 cursor-pointer flex justify-between items-center text-xs" data-symbol="EUR/USD">
+                        <span class="font-mono font-bold text-white">EUR/USD</span><span class="text-[11px] font-mono text-emerald-400">+0.24%</span>
+                    </div>
+                    <div class="asset-option px-3 py-2 hover:bg-dark-700/80 cursor-pointer flex justify-between items-center text-xs" data-symbol="GBP/USD">
+                        <span class="font-mono font-bold text-white">GBP/USD</span><span class="text-[11px] font-mono text-emerald-400">+0.18%</span>
+                    </div>
+                    <div class="asset-option px-3 py-2 hover:bg-dark-700/80 cursor-pointer flex justify-between items-center text-xs" data-symbol="USD/JPY">
+                        <span class="font-mono font-bold text-white">USD/JPY</span><span class="text-[11px] font-mono text-rose-400">-0.12%</span>
+                    </div>
+                    <div class="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-2">Crypto Assets</div>
+                    <div class="asset-option px-3 py-2 hover:bg-dark-700/80 cursor-pointer flex justify-between items-center text-xs" data-symbol="BTC/USD">
+                        <span class="font-mono font-bold text-white">BTC/USD</span><span class="text-[11px] font-mono text-emerald-400">+1.85%</span>
+                    </div>
+                    <div class="asset-option px-3 py-2 hover:bg-dark-700/80 cursor-pointer flex justify-between items-center text-xs" data-symbol="ETH/USD">
+                        <span class="font-mono font-bold text-white">ETH/USD</span><span class="text-[11px] font-mono text-emerald-400">+2.10%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Header Actions & Account Overview -->
+        <div class="flex items-center space-x-1.5 sm:space-x-3">
+            <!-- Account Mode Switcher -->
+            <div class="flex items-center bg-dark-950 rounded-lg p-0.5 sm:p-1 border border-gray-800 text-[11px] sm:text-xs">
+                <button id="accountTypeDemoBtn" class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 transition-all">DEMO</button>
+                <button id="accountTypeRealBtn" class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-bold text-gray-400 hover:text-white transition-all">REAL</button>
+            </div>
+
+            <!-- Balance Display -->
+            <div class="flex flex-col items-end px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-dark-800/90 border border-gray-800/80">
+                <span class="text-[8px] sm:text-[9px] uppercase font-bold text-gray-400 tracking-wider">Balance</span>
+                <span id="userBalanceDisplay" class="font-mono text-xs sm:text-sm font-extrabold text-emerald-400">$10,000.00</span>
+            </div>
+
+            <!-- Deposit & Withdraw Quick Buttons -->
+            <button id="openDepositBtn" class="flex items-center space-x-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-lg text-xs transition shadow-lg shadow-emerald-950/40">
+                <i data-lucide="arrow-down-left" class="w-3.5 h-3.5 stroke-[3]"></i>
+                <span class="hidden sm:inline">Deposit</span>
+            </button>
+            <button id="openWithdrawBtn" class="hidden sm:flex items-center space-x-1 bg-dark-800 hover:bg-dark-700 text-gray-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-700/80 transition">
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                <span>Withdraw</span>
+            </button>
+
+            <!-- Gemini AI Drawer Toggle -->
+            <button id="toggleAiDrawerBtn" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white p-1.5 sm:p-2 rounded-lg transition shadow-md shadow-purple-900/30" title="Gemini AI Market Signal Analyst">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+            </button>
+
+            <!-- PWA Install App Button -->
+            <button id="pwaInstallBtn" class="hidden bg-blue-600/20 text-blue-400 border border-blue-500/30 p-1.5 rounded-lg text-xs font-bold" title="Install App to Mobile">
+                <i data-lucide="download" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Residency & Verification Status Button -->
+            <button id="openResidencyBtn" class="flex items-center space-x-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1.5 rounded-lg text-xs font-semibold transition" title="Residency & Identity Verification">
+                <i data-lucide="shield-alert" id="residencyIcon" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span id="residencyStatusBadge" class="hidden sm:inline text-[10px] uppercase font-bold tracking-wider">Unverified</span>
+            </button>
+
+            <!-- User Auth Profile Button -->
+            <button id="userAuthBtn" class="flex items-center space-x-1 bg-dark-800 hover:bg-dark-700 border border-gray-700/80 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-medium">
+                <i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i>
+                <span id="userAuthStatusText" class="text-xs text-gray-300 hidden md:inline">Guest</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="flex-1 flex overflow-hidden relative pb-14 sm:pb-0">
+        
+        <!-- LEFT: Live Quotes Sidebar (Desktop View) -->
+        <aside id="mobileQuotesPanel" class="w-full sm:w-56 glass border-r border-gray-800/80 flex flex-col shrink-0 absolute sm:relative inset-0 z-20 sm:z-0 bg-dark-950 sm:bg-transparent hidden sm:flex">
+            <div class="p-3 border-b border-gray-800/80 flex justify-between items-center bg-dark-900/60">
+                <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">Live Quotes</span>
+                <span class="flex h-2 w-2 relative">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+            </div>
+            
+            <div id="liveQuotesList" class="flex-1 overflow-y-auto divide-y divide-gray-800/40">
+                <!-- Dynamically populated live quotes list -->
+            </div>
+            
+            <!-- Technical Analysis Metrics Widget -->
+            <div class="p-3 border-t border-gray-800/80 bg-dark-900/80">
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Technical Indicators</div>
+                <div class="space-y-1.5 text-xs font-mono">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">RSI (14)</span>
+                        <span id="widgetRsi" class="text-amber-400 font-bold">54.2</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">SMA (20)</span>
+                        <span id="widgetSma" class="text-gray-200">1.08450</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Volatility</span>
+                        <span class="text-emerald-400 font-semibold">Medium</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER: Chart & Trade Activity Panels -->
+        <section id="mobileChartPanel" class="flex-1 flex flex-col overflow-hidden bg-dark-950 relative w-full">
+            
+            <!-- Chart Toolbar -->
+            <div class="h-10 border-b border-gray-800/80 px-3 sm:px-4 flex items-center justify-between bg-dark-900/50 shrink-0">
+                <div class="flex items-center space-x-2 sm:space-x-3 text-xs">
+                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase">Timeframe:</span>
+                    <div class="flex items-center space-x-0.5 sm:space-x-1 bg-dark-950 p-0.5 rounded-lg border border-gray-800">
+                        <button class="tf-btn px-1.5 sm:px-2 py-0.5 rounded text-[11px] font-mono bg-blue-600 text-white font-bold">1m</button>
+                        <button class="tf-btn px-1.5 sm:px-2 py-0.5 rounded text-[11px] font-mono text-gray-400 hover:text-white">5m</button>
+                        <button class="tf-btn px-1.5 sm:px-2 py-0.5 rounded text-[11px] font-mono text-gray-400 hover:text-white">15m</button>
+                        <button class="tf-btn px-1.5 sm:px-2 py-0.5 rounded text-[11px] font-mono text-gray-400 hover:text-white">1h</button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-2 sm:space-x-3 text-xs font-mono">
+                    <div class="flex items-center space-x-1">
+                        <span class="text-gray-500 hidden sm:inline">Ask:</span>
+                        <span id="buyQuoteDisplay" class="text-emerald-400 font-bold">1.08465</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <span class="text-gray-500 hidden sm:inline">Bid:</span>
+                        <span id="sellQuoteDisplay" class="text-rose-400 font-bold">1.08460</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Chart Container -->
+            <div class="flex-1 relative w-full h-full p-1.5 sm:p-2 overflow-hidden bg-gradient-to-b from-dark-900/40 to-dark-950">
+                <canvas id="tradingChartCanvas" class="w-full h-full block rounded-xl"></canvas>
+            </div>
+
+            <!-- Bottom Panel: Positions & Audit Log -->
+            <div id="mobileOrdersPanel" class="h-44 sm:h-48 border-t border-gray-800/80 glass flex flex-col shrink-0">
+                <div class="h-8 border-b border-gray-800/80 px-3 flex items-center justify-between bg-dark-900/80 text-xs">
+                    <div class="flex space-x-3 sm:space-x-4">
+                        <button id="tabForexPos" class="font-bold text-blue-400 border-b-2 border-blue-500 py-1 flex items-center space-x-1">
+                            <span>Forex Orders</span>
+                            <span id="countForexPos" class="px-1.5 py-0.2 rounded-full bg-blue-500/20 text-[10px] font-mono">0</span>
+                        </button>
+                        <button id="tabBinaryPos" class="font-semibold text-gray-400 hover:text-white py-1 flex items-center space-x-1">
+                            <span>Binary Contracts</span>
+                            <span id="countBinaryPos" class="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-[10px] font-mono">0</span>
+                        </button>
+                        <button id="tabTransactions" class="font-semibold text-gray-400 hover:text-white py-1 hidden sm:inline-block">
+                            <span>Transactions</span>
+                        </button>
+                    </div>
+                    <span class="text-[10px] text-gray-500 font-mono hidden sm:inline">Matching Engine Active</span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-2">
+                    <!-- Forex Positions Table -->
+                    <div id="panelForexPos">
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead class="text-gray-500 text-[10px] uppercase border-b border-gray-800">
+                                <tr>
+                                    <th class="py-1">Asset</th>
+                                    <th class="py-1">Type</th>
+                                    <th class="py-1">Lots</th>
+                                    <th class="py-1 hidden sm:table-cell">Open</th>
+                                    <th class="py-1">Current</th>
+                                    <th class="py-1">P/L ($)</th>
+                                    <th class="py-1 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forexPosTableBody" class="divide-y divide-gray-800/40">
+                                <tr><td colspan="7" class="py-4 text-center text-gray-500 italic font-sans">No active Forex positions</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Binary Positions Table -->
+                    <div id="panelBinaryPos" class="hidden">
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead class="text-gray-500 text-[10px] uppercase border-b border-gray-800">
+                                <tr>
+                                    <th class="py-1">Asset</th>
+                                    <th class="py-1">Type</th>
+                                    <th class="py-1">Amount</th>
+                                    <th class="py-1 hidden sm:table-cell">Strike</th>
+                                    <th class="py-1">Expiry</th>
+                                    <th class="py-1">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="binaryPosTableBody" class="divide-y divide-gray-800/40">
+                                <tr><td colspan="6" class="py-4 text-center text-gray-500 italic font-sans">No active binary contracts</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div id="panelTransactions" class="hidden">
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead class="text-gray-500 text-[10px] uppercase border-b border-gray-800">
+                                <tr>
+                                    <th class="py-1">Date</th>
+                                    <th class="py-1">Type</th>
+                                    <th class="py-1">Gateway</th>
+                                    <th class="py-1">Amount</th>
+                                    <th class="py-1">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody" class="divide-y divide-gray-800/40">
+                                <tr><td colspan="5" class="py-4 text-center text-gray-500 italic font-sans">No financial transactions recorded</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT: Order Execution Terminal Panel -->
+        <aside id="mobileTradePanel" class="w-full sm:w-72 glass border-l border-gray-800/80 p-4 flex-col shrink-0 space-y-4 absolute sm:relative inset-0 z-20 sm:z-0 bg-dark-950 sm:bg-transparent hidden sm:flex">
+            
+            <!-- Trade Mode Switcher -->
+            <div class="grid grid-cols-2 gap-1 bg-dark-950 p-1 rounded-xl border border-gray-800 text-xs">
+                <button id="modeForexBtn" class="py-2 rounded-lg bg-blue-600 text-white font-extrabold shadow-md transition">Forex</button>
+                <button id="modeBinaryBtn" class="py-2 rounded-lg text-gray-400 hover:text-white font-extrabold transition">Binary Options</button>
+            </div>
+
+            <!-- Asset Live Ticker Box -->
+            <div class="p-3 bg-dark-900/80 border border-gray-800 rounded-xl flex justify-between items-center">
+                <div>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase">Current Pair</div>
+                    <div id="terminalAssetTitle" class="text-sm font-extrabold text-white font-mono">EUR/USD</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-gray-400 font-bold uppercase">Live Price</div>
+                    <div id="candC" class="text-sm font-extrabold text-emerald-400 font-mono">1.08460</div>
+                </div>
+            </div>
+
+            <!-- 1. FOREX EXECUTION FORM -->
+            <div id="forexOrderForm" class="space-y-3.5 flex-1 flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Volume (Lots)</label>
+                        <input type="number" id="forexLotInput" value="0.10" step="0.01" min="0.01" max="100" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-blue-500 text-sm">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Stop Loss (SL)</label>
+                            <input type="number" id="forexSlInput" placeholder="Optional" step="0.0001" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-2.5 py-1.5 text-white font-mono text-xs focus:outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Take Profit (TP)</label>
+                            <input type="number" id="forexTpInput" placeholder="Optional" step="0.0001" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-2.5 py-1.5 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-4">
+                    <button id="btnBuyForex" class="py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-slate-950 font-extrabold rounded-xl text-sm shadow-lg shadow-emerald-950/40 transition flex flex-col items-center justify-center">
+                        <span>BUY / LONG</span>
+                        <span class="text-[10px] opacity-80 font-mono font-normal">Ask Price</span>
+                    </button>
+                    <button id="btnSellForex" class="py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-extrabold rounded-xl text-sm shadow-lg shadow-rose-950/40 transition flex flex-col items-center justify-center">
+                        <span>SELL / SHORT</span>
+                        <span class="text-[10px] opacity-80 font-mono font-normal">Bid Price</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. BINARY OPTIONS FORM -->
+            <div id="binaryOrderForm" class="hidden space-y-3.5 flex-1 flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Investment Amount ($)</label>
+                        <input type="number" id="binaryAmountInput" value="50" min="5" step="5" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-purple-500 text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Expiration Time</label>
+                        <select id="binaryExpirySelect" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-purple-500">
+                            <option value="30">30 Seconds (Payout +85%)</option>
+                            <option value="60" selected>60 Seconds (Payout +85%)</option>
+                            <option value="120">2 Minutes (Payout +82%)</option>
+                            <option value="300">5 Minutes (Payout +80%)</option>
+                        </select>
+                    </div>
+
+                    <div class="p-2.5 bg-purple-950/20 border border-purple-800/30 rounded-xl text-xs flex justify-between items-center">
+                        <span class="text-gray-400">Potential Profit:</span>
+                        <span id="binaryProfitDisplay" class="font-mono font-bold text-emerald-400 text-sm">+$42.50</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-4">
+                    <button id="btnCallBinary" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-lg transition flex flex-col items-center justify-center">
+                        <div class="flex items-center space-x-1"><i data-lucide="trending-up" class="w-4 h-4"></i><span>HIGHER</span></div>
+                        <span class="text-[10px] opacity-80">Call Contract</span>
+                    </button>
+                    <button id="btnPutBinary" class="py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl text-sm shadow-lg transition flex flex-col items-center justify-center">
+                        <div class="flex items-center space-x-1"><i data-lucide="trending-down" class="w-4 h-4"></i><span>LOWER</span></div>
+                        <span class="text-[10px] opacity-80">Put Contract</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- MOBILE NAVIGATION BAR (App Bottom Bar for iOS & Android) -->
+    <nav class="sm:hidden fixed bottom-0 left-0 right-0 h-14 glass border-t border-gray-800/90 z-40 flex items-center justify-around pb-safe">
+        <button id="navTabChart" class="mobile-nav-item flex flex-col items-center justify-center text-blue-400 space-y-0.5">
+            <i data-lucide="line-chart" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Chart</span>
+        </button>
+        <button id="navTabQuotes" class="mobile-nav-item flex flex-col items-center justify-center text-gray-400 hover:text-white space-y-0.5">
+            <i data-lucide="list-filter" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Quotes</span>
+        </button>
+        <button id="navTabTrade" class="mobile-nav-item flex flex-col items-center justify-center text-gray-400 hover:text-white space-y-0.5">
+            <i data-lucide="sliders" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Trade</span>
+        </button>
+        <button id="navTabOrders" class="mobile-nav-item flex flex-col items-center justify-center text-gray-400 hover:text-white space-y-0.5">
+            <i data-lucide="history" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Orders</span>
+        </button>
+        <button id="navTabAi" class="mobile-nav-item flex flex-col items-center justify-center text-purple-400 space-y-0.5">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">AI Signal</span>
+        </button>
+    </nav>
+
+    <!-- DEPOSIT MODAL -->
+    <div id="depositModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-dark-900 border border-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 sm:p-5 border-b border-gray-800 flex items-center justify-between bg-dark-950/60">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fas fa-wallet text-base sm:text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-bold text-white">Deposit Gateway</h3>
+                        <p class="text-[11px] text-gray-400">Instant funding via M-Pesa, Credit/Debit Cards & Web3 Crypto</p>
+                    </div>
+                </div>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-lg"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+                <!-- Payment Gateway Selector Tabs -->
+                <div class="grid grid-cols-3 gap-1.5 p-1 bg-dark-950 rounded-xl border border-gray-800">
+                    <button class="deposit-tab-btn py-2 rounded-lg bg-emerald-600 text-slate-950 font-bold" data-tab="mpesa">Mobile / M-Pesa</button>
+                    <button class="deposit-tab-btn py-2 rounded-lg text-gray-400 font-bold hover:text-white" data-tab="card">Debit/Credit Card</button>
+                    <button class="deposit-tab-btn py-2 rounded-lg text-gray-400 font-bold hover:text-white" data-tab="crypto">Crypto Web3</button>
+                </div>
+
+                <!-- 1. MOBILE MONEY / M-PESA GATEWAY -->
+                <div id="depositTabMpesa" class="space-y-3.5">
+                    <div class="p-3 bg-emerald-950/20 border border-emerald-800/30 rounded-xl text-slate-300 text-xs">
+                        Select your country operator for instant STK Push payment prompt to your handset.
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-gray-400 mb-1">Country / Region</label>
+                            <select id="momoCountry" onchange="onMomoCountryChange()" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                                <option value="KE">🇰🇪 Kenya (M-Pesa / Safaricom)</option>
+                                <option value="TZ">🇹🇿 Tanzania (Vodacom / Tigo)</option>
+                                <option value="UG">🇺🇬 Uganda (MTN / Airtel)</option>
+                                <option value="GH">🇬🇭 Ghana (MTN MoMo)</option>
+                                <option value="ZA">🇿🇦 South Africa (Capitec Pay)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">Network Operator</label>
+                            <select id="momoNetwork" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                                <option value="safaricom">Safaricom M-Pesa STK Push</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-400 mb-1">Phone Number</label>
+                        <div class="flex gap-2">
+                            <span id="momoPrefix" class="bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 font-mono text-gray-300">+254</span>
+                            <input type="tel" id="momoPhone" placeholder="712345678" class="flex-1 bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-400 mb-1">Deposit Amount (USD)</label>
+                        <input type="number" id="mpesaAmount" value="50" min="5" oninput="onMomoCountryChange()" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono font-bold text-sm">
+                    </div>
+
+                    <div class="p-3 bg-dark-950 rounded-xl border border-gray-800 flex justify-between items-center text-xs">
+                        <span class="text-gray-400">Total Local Charge:</span>
+                        <span id="momoConvertedTotal" class="font-mono font-bold text-emerald-400">KES 6,500.00</span>
+                    </div>
+
+                    <button id="btnSubmitMpesaDeposit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl shadow-lg transition">Send STK Push Request</button>
+                </div>
+
+                <!-- 2. CARD PAYMENT GATEWAY -->
+                <div id="depositTabCard" class="hidden space-y-3.5">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Cardholder Name</label>
+                        <input type="text" id="cardName" placeholder="John Doe" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Card Number</label>
+                        <input type="text" id="cardNumber" placeholder="4532 •••• •••• 8890" maxlength="19" oninput="formatCardNumber(this)" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-gray-400 mb-1">Expiry Date</label>
+                            <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-center">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">CVC / CVV</label>
+                            <input type="password" id="cardCvc" placeholder="•••" maxlength="4" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-center">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Deposit Amount ($)</label>
+                        <input type="number" id="cardAmount" value="100" min="10" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono font-bold">
+                    </div>
+                    <button id="btnSubmitCardDeposit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl shadow-lg transition">Pay Securely Now</button>
+                </div>
+
+                <!-- 3. CRYPTO GATEWAY -->
+                <div id="depositTabCrypto" class="hidden space-y-3.5">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Cryptocurrency Network</label>
+                        <select id="cryptoAsset" onchange="updateCryptoAddress()" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                            <option value="usdt_trc20">USDT (TRC-20 TRON)</option>
+                            <option value="usdt_erc20">USDT (ERC-20 Ethereum)</option>
+                            <option value="btc">Bitcoin (BTC)</option>
+                        </select>
+                    </div>
+                    <div class="p-4 bg-dark-950 border border-gray-800 rounded-xl flex flex-col items-center justify-center space-y-3 text-center">
+                        <img id="cryptoQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=T9xTRC20USDTDepositAddressSimulated" alt="QR" class="w-24 h-24 sm:w-28 sm:h-28 bg-white p-1 rounded-lg">
+                        <input type="text" id="cryptoWalletAddress" readonly value="T9xTRC20USDTDepositAddressSimulated99" class="w-full bg-dark-900 border border-gray-800 text-[10px] font-mono text-emerald-400 px-3 py-2 rounded-lg text-center">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Amount Sent (USD)</label>
+                        <input type="number" id="depositCryptoAmount" value="100" min="10" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono font-bold">
+                    </div>
+                    <button id="btnSubmitCryptoDeposit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl shadow-lg transition">I Have Sent Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPREHENSIVE WITHDRAWAL DASHBOARD MODAL -->
+    <div id="withdrawModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-dark-900 border border-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="p-4 sm:p-5 border-b border-gray-800 flex items-center justify-between bg-dark-950/60">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <i data-lucide="arrow-up-right" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Withdrawal Dashboard</h3>
+                        <p class="text-[11px] text-gray-400">Manage payout requests, saved payment accounts & limits</p>
+                    </div>
+                </div>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-lg"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="p-4 bg-dark-950 border-b border-gray-800 flex justify-between items-center text-xs">
+                <div class="flex space-x-2">
+                    <button id="withdrawTabRequestBtn" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition">New Payout Request</button>
+                    <button id="withdrawTabHistoryBtn" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition">History & Status</button>
+                    <button id="withdrawTabAccountsBtn" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition hidden sm:inline-block">Payout Methods</button>
+                </div>
+                <div class="text-right font-mono">
+                    <div class="text-[9px] text-gray-400 uppercase">Withdrawable</div>
+                    <div id="withdrawAvailableBal" class="font-bold text-emerald-400">$10,000.00</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content Area -->
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+                
+                <!-- KYC Tier Notice Banner -->
+                <div id="withdrawKycNotice" class="p-3 bg-amber-950/30 border border-amber-800/40 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center space-x-2 text-amber-300">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                        <span>Tier 1 Limit: $1,000/day. Complete Residency Registration to unlock $50,000/day payouts.</span>
+                    </div>
+                    <button id="btnWithdrawVerifyNow" class="px-2.5 py-1 bg-amber-500 text-slate-950 font-bold rounded-lg shrink-0 hover:bg-amber-400 transition">Verify</button>
+                </div>
+
+                <!-- 1. TAB: NEW PAYOUT REQUEST -->
+                <div id="withdrawTabRequest" class="space-y-4">
+                    <form id="withdrawForm" class="space-y-3.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-gray-400 mb-1">Withdrawal Amount ($)</label>
+                                <input type="number" id="withdrawAmountInput" value="100" min="10" max="10000" required class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono font-bold text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 mb-1">Payout Gateway</label>
+                                <select id="withdrawMethodSelect" onchange="onWithdrawMethodChange()" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-medium">
+                                    <option value="M-Pesa Mobile Money">M-Pesa / Mobile Money (Instant)</option>
+                                    <option value="Crypto USDT (TRC-20)">Crypto USDT (TRC-20 TRON)</option>
+                                    <option value="Direct Bank Wire">Direct Bank Wire Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Destination Fields -->
+                        <div id="withdrawDestFieldMpesa">
+                            <label class="block text-gray-400 mb-1">Registered M-Pesa Phone Number</label>
+                            <input type="tel" id="withdrawMpesaPhone" placeholder="+254712345678" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
+                        </div>
+
+                        <div id="withdrawDestFieldCrypto" class="hidden">
+                            <label class="block text-gray-400 mb-1">USDT (TRC-20) Wallet Address</label>
+                            <input type="text" id="withdrawCryptoAddress" placeholder="T9xTRC20USDT..." class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
+                        </div>
+
+                        <div id="withdrawDestFieldBank" class="hidden space-y-2">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="withdrawBankName" placeholder="Bank Name" class="bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                                <input type="text" id="withdrawAccountNum" placeholder="Account Number / IBAN" class="bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Fee Breakdown -->
+                        <div class="p-3 bg-dark-950 border border-gray-800 rounded-xl space-y-1 font-mono text-[11px]">
+                            <div class="flex justify-between text-gray-400">
+                                <span>Network/Processing Fee:</span>
+                                <span class="text-emerald-400">FREE ($0.00)</span>
+                            </div>
+                            <div class="flex justify-between font-bold text-white">
+                                <span>Estimated Net Credit:</span>
+                                <span id="withdrawNetCreditDisplay">$100.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl shadow-lg transition">Submit Payout Request</button>
+                    </form>
+                </div>
+
+                <!-- 2. TAB: WITHDRAWAL HISTORY & STATUS -->
+                <div id="withdrawTabHistory" class="hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left font-mono text-xs">
+                            <thead class="text-gray-500 text-[10px] uppercase border-b border-gray-800">
+                                <tr>
+                                    <th class="py-2">Ref ID</th>
+                                    <th class="py-2">Date</th>
+                                    <th class="py-2">Gateway</th>
+                                    <th class="py-2">Amount</th>
+                                    <th class="py-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawHistoryTableBody" class="divide-y divide-gray-800/40">
+                                <tr><td colspan="5" class="py-4 text-center text-gray-500 italic font-sans">No withdrawal requests recorded</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. TAB: SAVED PAYOUT ACCOUNTS -->
+                <div id="withdrawTabAccounts" class="hidden space-y-3">
+                    <div class="p-3 bg-dark-950 border border-gray-800 rounded-xl flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-mobile-alt text-emerald-400 text-base"></i>
+                            <div>
+                                <div class="font-bold text-white">Primary M-Pesa Account</div>
+                                <div class="text-[10px] font-mono text-gray-400">+254712345678 (Verified)</div>
+                            </div>
+                        </div>
+                        <span class="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">DEFAULT</span>
+                    </div>
+
+                    <div class="p-3 bg-dark-950 border border-gray-800 rounded-xl flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <i class="fab fa-ethereum text-purple-400 text-base"></i>
+                            <div>
+                                <div class="font-bold text-white">Crypto USDT TRC-20 Wallet</div>
+                                <div class="text-[10px] font-mono text-gray-400">T9xTRC20...99 (Saved)</div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-white text-xs"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- RESIDENCY REGISTRATION & IDENTITY VERIFICATION MODAL -->
+    <div id="residencyModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-dark-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 sm:p-5 border-b border-gray-800 flex items-center justify-between bg-dark-950/60">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Residency Registration</h3>
+                        <p class="text-[11px] text-gray-400">Global compliance, tax identification & residency setup</p>
+                    </div>
+                </div>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-lg"><i class="fas fa-times"></i></button>
+            </div>
+
+            <form id="residencyForm" class="p-4 sm:p-6 overflow-y-auto space-y-3.5 flex-1 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Country of Legal Residence</label>
+                        <select id="residencyCountry" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                            <option value="Kenya">🇰🇪 Kenya</option>
+                            <option value="Nigeria">🇳🇬 Nigeria</option>
+                            <option value="South Africa">🇿🇦 South Africa</option>
+                            <option value="Tanzania">🇹🇿 Tanzania</option>
+                            <option value="Uganda">🇺🇬 Uganda</option>
+                            <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                            <option value="United States">🇺🇸 United States</option>
+                            <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Full Legal Name</label>
+                        <input type="text" id="residencyFullName" required placeholder="As shown on passport / ID" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Date of Birth</label>
+                        <input type="date" id="residencyDob" required class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">National ID / Tax Number</label>
+                        <input type="text" id="residencyIdNum" required placeholder="A12345678" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 mb-1">Residential Street Address</label>
+                    <input type="text" id="residencyAddress" required placeholder="House/Apt No., Street, City, Postal Code" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                </div>
+
+                <!-- Simulated Document Upload Dropzones -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Government ID / Passport</label>
+                        <div class="p-3 bg-dark-950 border border-dashed border-gray-700 rounded-xl text-center cursor-pointer hover:border-amber-500 transition" onclick="document.getElementById('simulatedIdUpload').click()">
+                            <i data-lucide="upload-cloud" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                            <span id="idUploadLabel" class="text-[10px] text-gray-300 block">Click to attach ID Front/Back</span>
+                            <input type="file" id="simulatedIdUpload" class="hidden" onchange="document.getElementById('idUploadLabel').innerText = this.files[0]?.name || 'Attached'">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Proof of Address (Utility Bill)</label>
+                        <div class="p-3 bg-dark-950 border border-dashed border-gray-700 rounded-xl text-center cursor-pointer hover:border-amber-500 transition" onclick="document.getElementById('simulatedProofUpload').click()">
+                            <i data-lucide="file-text" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                            <span id="proofUploadLabel" class="text-[10px] text-gray-300 block">Attach Bank Statement/Bill</span>
+                            <input type="file" id="simulatedProofUpload" class="hidden" onchange="document.getElementById('proofUploadLabel').innerText = this.files[0]?.name || 'Attached'">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-amber-950/20 border border-amber-800/30 rounded-xl text-[10px] text-amber-200/80 leading-relaxed">
+                    By submitting, you certify that all details provided correspond accurately to your official legal identity and residence tax profile.
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold rounded-xl shadow-lg transition">Submit Residency Documents</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- USER AUTH MODAL WITH LOGIN, SIGN UP & PASSWORD RESET -->
+    <!-- REGISTRATION DASHBOARD -->
+    <div id="registrationDashboardModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-dark-900 border border-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 sm:p-5 border-b border-gray-800 flex items-center justify-between bg-dark-950/60">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Registration Dashboard</h3>
+                        <p class="text-[11px] text-gray-400">Track your identity verification and account access</p>
+                    </div>
+                </div>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-lg" aria-label="Close registration dashboard"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
+                <div class="p-4 rounded-xl border border-blue-500/20 bg-blue-500/10 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[10px] text-blue-300 font-bold uppercase tracking-wider">Verification status</div>
+                        <div id="registrationDashboardStatus" class="mt-1 text-lg font-extrabold text-amber-400">UNVERIFIED</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] text-gray-400 uppercase">Current account tier</div>
+                        <div id="registrationDashboardTier" class="mt-1 font-bold text-white">Tier 1</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="p-3 bg-dark-950 border border-gray-800 rounded-xl"><div class="text-gray-400">Daily withdrawal limit</div><div id="registrationDashboardLimit" class="mt-1 font-mono font-bold text-white">$1,000</div></div>
+                    <div class="p-3 bg-dark-950 border border-gray-800 rounded-xl"><div class="text-gray-400">Profile country</div><div id="registrationDashboardCountry" class="mt-1 font-bold text-white">Not submitted</div></div>
+                    <div class="p-3 bg-dark-950 border border-gray-800 rounded-xl"><div class="text-gray-400">Registered name</div><div id="registrationDashboardName" class="mt-1 font-bold text-white">Not submitted</div></div>
+                </div>
+
+                <div class="p-3 bg-dark-950 border border-gray-800 rounded-xl">
+                    <div class="flex items-center justify-between mb-3"><span class="font-bold text-white">Registration checklist</span><span id="registrationDashboardProgress" class="font-mono text-blue-400">0/3 complete</span></div>
+                    <div class="space-y-2 text-gray-300">
+                        <div class="flex items-center gap-2"><i id="registrationCheckProfile" data-lucide="circle" class="w-4 h-4 text-gray-500"></i><span>Personal details submitted</span></div>
+                        <div class="flex items-center gap-2"><i id="registrationCheckId" data-lucide="circle" class="w-4 h-4 text-gray-500"></i><span>Government ID attached</span></div>
+                        <div class="flex items-center gap-2"><i id="registrationCheckAddress" data-lucide="circle" class="w-4 h-4 text-gray-500"></i><span>Proof of address attached</span></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button id="openRegistrationFormBtn" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition">Continue Registration</button>
+                    <button id="registrationDashboardDoneBtn" class="flex-1 py-2.5 bg-dark-800 hover:bg-dark-700 border border-gray-700 text-gray-200 font-bold rounded-xl transition">Close Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="authModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-dark-900 border border-gray-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-[1.05fr_0.95fr]">
+            <div class="hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-blue-950 via-dark-900 to-emerald-950 border-r border-gray-800 min-h-[520px]">
+                <div>
+                    <div class="flex items-center space-x-2 text-blue-400 font-extrabold tracking-wider text-lg"><i data-lucide="candlestick-chart" class="w-6 h-6"></i><span>NEXUS<span class="text-emerald-400">X</span></span></div>
+                    <div class="mt-16 max-w-sm">
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-blue-300 font-bold">The trading terminal</p>
+                        <h2 class="mt-3 text-4xl font-extrabold leading-tight text-white">Trade with a clearer view of the market.</h2>
+                        <p class="mt-4 text-sm leading-relaxed text-gray-300">Monitor live quotes, manage positions, and keep your verification details in one focused workspace.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center text-[10px] text-gray-300">
+                    <div class="p-3 rounded-xl bg-white/5 border border-white/10"><i data-lucide="activity" class="w-4 h-4 mx-auto mb-1 text-emerald-400"></i>Live markets</div>
+                    <div class="p-3 rounded-xl bg-white/5 border border-white/10"><i data-lucide="shield-check" class="w-4 h-4 mx-auto mb-1 text-blue-400"></i>Secure access</div>
+                    <div class="p-3 rounded-xl bg-white/5 border border-white/10"><i data-lucide="layout-dashboard" class="w-4 h-4 mx-auto mb-1 text-amber-400"></i>One dashboard</div>
+                </div>
+            </div>
+            <div class="p-5 sm:p-7 space-y-4">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <div><h3 id="authModalTitle" class="text-base font-bold text-white">Welcome to NexusX</h3><p class="text-[11px] text-gray-400 mt-0.5">Sign in to access your trading workspace</p></div>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-lg" aria-label="Close sign in"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Auth Mode Switch Tabs -->
+            <div class="grid grid-cols-3 gap-1 bg-dark-950 p-1 rounded-xl border border-gray-800 text-xs">
+                <button id="authTabLoginBtn" class="py-1.5 rounded-lg bg-blue-600 text-white font-bold transition">Log In</button>
+                <button id="authTabSignupBtn" class="py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition">Sign Up</button>
+                <button id="authTabResetBtn" class="py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition">Reset</button>
+            </div>
+
+            <!-- 1. LOGIN FORM -->
+            <form id="authLoginForm" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-gray-400 mb-1">Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="trader@nexusx.com" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-gray-400">Password</label>
+                        <button type="button" id="linkToResetPass" class="text-[10px] text-blue-400 hover:underline">Forgot password?</button>
+                    </div>
+                    <input type="password" id="loginPass" required placeholder="••••••••" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition">Sign In to Dashboard</button>
+                <div class="flex items-center gap-2 text-[10px] text-gray-500"><span class="h-px bg-gray-800 flex-1"></span><span>OR CONTINUE WITH</span><span class="h-px bg-gray-800 flex-1"></span></div>
+                <button type="button" id="btnGoogleAuth" class="w-full py-2.5 bg-white hover:bg-gray-100 text-gray-900 font-bold rounded-xl transition flex items-center justify-center gap-2"><span class="text-base font-extrabold">G</span><span>Continue with Google</span></button>
+            </form>
+
+            <!-- 2. SIGN UP FORM -->
+            <form id="authSignupForm" class="hidden space-y-3 text-xs">
+                <div>
+                    <label class="block text-gray-400 mb-1">Full Name</label>
+                    <input type="text" id="signupName" required placeholder="Alex Morgan" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">Email Address</label>
+                    <input type="email" id="signupEmail" required placeholder="new.trader@nexusx.com" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">Create Password</label>
+                    <input type="password" id="signupPass" required placeholder="••••••••" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition">Create Trading Account</button>
+            </form>
+
+            <!-- 3. PASSWORD RESET FORM -->
+            <form id="authResetForm" class="hidden space-y-3 text-xs">
+                <div class="p-2.5 bg-blue-950/20 border border-blue-800/30 rounded-xl text-gray-300 text-[11px]">
+                    Enter your registered email address to receive an instant password reset recovery link and authorization token.
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">Registered Email</label>
+                    <input type="email" id="resetEmail" required placeholder="trader@nexusx.com" class="w-full bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg transition">Send Recovery Password Link</button>
+            </form>
+
+            <div class="border-t border-gray-800 pt-3 flex justify-between text-xs">
+                <button id="btnGuestAuth" class="text-gray-400 hover:text-white text-[11px]">Continue as Guest</button>
+                <button id="btnLogout" class="text-rose-400 hover:text-rose-300 text-[11px]">Reset Session</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GEMINI AI ASSISTANT DRAWER -->
+    <div id="aiDrawer" class="fixed top-0 right-0 h-full w-full sm:w-80 glass border-l border-gray-800/80 z-40 transform translate-x-full transition-transform duration-300 flex flex-col p-4 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div class="flex items-center space-x-2 text-purple-400">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                <span class="font-bold text-sm text-white">Gemini Market Analyst</span>
+            </div>
+            <button id="closeAiDrawerBtn" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto py-4 space-y-4 text-xs">
+            <div class="p-3 bg-purple-950/20 border border-purple-800/30 rounded-xl">
+                <div class="text-[10px] text-purple-300 font-bold uppercase mb-1">Target Asset Pair</div>
+                <div id="aiTargetAsset" class="text-base font-extrabold text-white font-mono">EUR/USD</div>
+            </div>
+
+            <button id="btnRunAiAnalysis" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                <i data-lucide="cpu" class="w-4 h-4"></i>
+                <span>Run Neural Technical Audit</span>
+            </button>
+
+            <div id="aiLoadingSpinner" class="hidden text-center py-6">
+                <i data-lucide="loader-2" class="w-6 h-6 text-purple-400 animate-spin mx-auto"></i>
+                <span class="text-[11px] text-gray-400 mt-2 block">Evaluating RSI divergence & exponential moving averages...</span>
+            </div>
+
+            <div id="aiAnalysisResult" class="space-y-3">
+                <div class="p-3 bg-dark-900 border border-gray-800 rounded-xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Market Sentiment</span>
+                        <span id="aiSignalBadge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold font-mono">BULLISH</span>
+                    </div>
+                    <div class="flex justify-between items-center font-mono">
+                        <span class="text-gray-400">Key Support</span>
+                        <span id="aiSupportVal" class="text-white">1.08200</span>
+                    </div>
+                    <div class="flex justify-between items-center font-mono">
+                        <span class="text-gray-400">Key Resistance</span>
+                        <span id="aiResistanceVal" class="text-white">1.08750</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-dark-900 border border-gray-800 rounded-xl space-y-1">
+                    <div class="text-[10px] text-gray-400 font-bold uppercase">Suggested Action</div>
+                    <div id="aiSuggestedAction" class="font-bold text-emerald-400 font-mono">BUY CALL / LONG</div>
+                    <p id="aiReasoningText" class="text-gray-300 text-[11px] leading-relaxed mt-1">
+                        Strong bullish divergence detected on the 5m RSI oscillator. Price action holding firmly above SMA (20).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="fixed bottom-16 sm:bottom-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        // LocalStorage Key
+        const STORAGE_KEY = 'NEXUSX_TRADING_STATE_v3';
+
+        // Default State
+        const defaultState = {
+            isDemoMode: true,
+            demoBalance: 10000.00,
+            realBalance: 0.00,
+            currentAsset: 'EUR/USD',
+            currentPrice: 1.08460,
+            forexPositions: [],
+            binaryPositions: [],
+            transactions: [],
+            withdrawals: [],
+            userEmail: 'Guest',
+            userName: '',
+            residencyStatus: 'UNVERIFIED', // UNVERIFIED, PENDING, VERIFIED
+            residencyData: null
+        };
+
+        // Load Persistent State or Default
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) return Object.assign({}, defaultState, JSON.parse(saved));
+            } catch(e) {}
+            return defaultState;
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(window.tradingState));
+            } catch(e) {}
+        }
+
+        window.tradingState = loadState();
+        window.isDemoMode = window.tradingState.isDemoMode;
+
+        const ASSET_PRICES = {
+            'EUR/USD': { price: 1.08460, decimals: 5, step: 0.00005 },
+            'GBP/USD': { price: 1.26520, decimals: 5, step: 0.00008 },
+            'USD/JPY': { price: 154.350, decimals: 3, step: 0.02000 },
+            'BTC/USD': { price: 67450.0, decimals: 2, step: 12.5000 },
+            'ETH/USD': { price: 3520.50, decimals: 2, step: 1.80000 }
+        };
+
+        function playSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                if (type === 'buy') {
+                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+                    osc.start(); osc.stop(ctx.currentTime + 0.12);
+                } else if (type === 'sell') {
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+                    osc.start(); osc.stop(ctx.currentTime + 0.12);
+                } else if (type === 'win') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+                    osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(); osc.stop(ctx.currentTime + 0.3);
+                }
+            } catch(e){}
+        }
+
+        window.showToast = function(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-2.5 rounded-xl border text-xs font-medium shadow-xl transition-all duration-300 transform translate-y-2 opacity-0 ${
+                type === 'success' ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-300' :
+                type === 'error' ? 'bg-rose-950/90 border-rose-500/40 text-rose-300' :
+                'bg-dark-800 border-gray-700 text-gray-200'
+            }`;
+            toast.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
+        window.updateBalanceUI = function() {
+            const bal = window.isDemoMode ? window.tradingState.demoBalance : window.tradingState.realBalance;
+            const balElem = document.getElementById('userBalanceDisplay');
+            if (balElem) balElem.innerText = `$${bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const availElem = document.getElementById('withdrawAvailableBal');
+            if (availElem) availElem.innerText = `$${bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // Update Residency Badge in Top Bar
+            const resBadge = document.getElementById('residencyStatusBadge');
+            const resBtn = document.getElementById('openResidencyBtn');
+            const resIcon = document.getElementById('residencyIcon');
+            const kycNotice = document.getElementById('withdrawKycNotice');
+
+            if (resBadge && resBtn) {
+                const status = window.tradingState.residencyStatus || 'UNVERIFIED';
+                resBadge.innerText = status;
+                
+                if (status === 'VERIFIED') {
+                    resBtn.className = "flex items-center space-x-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1.5 rounded-lg text-xs font-semibold transition";
+                    if (resIcon) resIcon.setAttribute('data-lucide', 'shield-check');
+                    if (kycNotice) kycNotice.classList.add('hidden');
+                } else if (status === 'PENDING') {
+                    resBtn.className = "flex items-center space-x-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1.5 rounded-lg text-xs font-semibold transition";
+                    if (resIcon) resIcon.setAttribute('data-lucide', 'clock');
+                    if (kycNotice) kycNotice.classList.add('hidden');
+                } else {
+                    resBtn.className = "flex items-center space-x-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1.5 rounded-lg text-xs font-semibold transition";
+                    if (resIcon) resIcon.setAttribute('data-lucide', 'shield-alert');
+                    if (kycNotice) kycNotice.classList.remove('hidden');
+                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            // Update Auth Button
+            const userAuthText = document.getElementById('userAuthStatusText');
+            if (userAuthText) userAuthText.innerText = window.tradingState.userName || window.tradingState.userEmail || 'Guest';
+
+            updateRegistrationDashboard();
+            saveState();
+        };
+
+        function updateRegistrationDashboard() {
+            const status = window.tradingState.residencyStatus || 'UNVERIFIED';
+            const data = window.tradingState.residencyData || {};
+            const statusElem = document.getElementById('registrationDashboardStatus');
+            const tierElem = document.getElementById('registrationDashboardTier');
+            const limitElem = document.getElementById('registrationDashboardLimit');
+            const countryElem = document.getElementById('registrationDashboardCountry');
+            const nameElem = document.getElementById('registrationDashboardName');
+            if (!statusElem) return;
+
+            statusElem.innerText = status;
+            statusElem.className = `mt-1 text-lg font-extrabold ${status === 'VERIFIED' ? 'text-emerald-400' : status === 'PENDING' ? 'text-blue-400' : 'text-amber-400'}`;
+            if (tierElem) tierElem.innerText = status === 'VERIFIED' ? 'Tier 2' : 'Tier 1';
+            if (limitElem) limitElem.innerText = status === 'VERIFIED' ? '$50,000' : '$1,000';
+            if (countryElem) countryElem.innerText = data.country || 'Not submitted';
+            if (nameElem) nameElem.innerText = data.fullName || 'Not submitted';
+
+            const checks = [
+                ['registrationCheckProfile', Boolean(data.fullName && data.idNum)],
+                ['registrationCheckId', Boolean(data.idAttached)],
+                ['registrationCheckAddress', Boolean(data.addressAttached)]
+            ];
+            let completed = 0;
+            checks.forEach(([id, complete]) => {
+                const icon = document.getElementById(id);
+                if (!icon) return;
+                completed += complete ? 1 : 0;
+                icon.setAttribute('data-lucide', complete ? 'circle-check' : 'circle');
+                icon.className = `w-4 h-4 ${complete ? 'text-emerald-400' : 'text-gray-500'}`;
+            });
+            const progress = document.getElementById('registrationDashboardProgress');
+            if (progress) progress.innerText = `${completed}/3 complete`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        window.onWithdrawMethodChange = function() {
+            const method = document.getElementById('withdrawMethodSelect')?.value;
+            document.getElementById('withdrawDestFieldMpesa')?.classList.toggle('hidden', !method.includes('M-Pesa'));
+            document.getElementById('withdrawDestFieldCrypto')?.classList.toggle('hidden', !method.includes('Crypto'));
+            document.getElementById('withdrawDestFieldBank')?.classList.toggle('hidden', !method.includes('Bank'));
+        };
+
+        window.renderWithdrawalHistory = function() {
+            const tbody = document.getElementById('withdrawHistoryTableBody');
+            if (!tbody) return;
+            const history = window.tradingState.withdrawals || [];
+
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-500 italic font-sans">No withdrawal requests recorded</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = history.map(w => `
+                <tr class="hover:bg-dark-700/30">
+                    <td class="py-1.5 text-gray-400 font-bold">${w.id}</td>
+                    <td class="py-1.5 text-gray-300">${w.date}</td>
+                    <td class="py-1.5 text-white">${w.method}</td>
+                    <td class="py-1.5 font-bold text-emerald-400">$${w.amount.toFixed(2)}</td>
+                    <td class="py-1.5 font-bold ${w.status === 'APPROVED' ? 'text-emerald-400' : 'text-amber-400'}">${w.status}</td>
+                </tr>
+            `).join('');
+        };
+
+        window.renderBinaryPositionsTable = function() {
+            const tbody = document.getElementById('binaryPosTableBody');
+            const countElem = document.getElementById('countBinaryPos');
+            if (!tbody) return;
+            
+            const activeCount = window.tradingState.binaryPositions.filter(b => b.status === 'ACTIVE').length;
+            if (countElem) countElem.innerText = activeCount;
+
+            if (window.tradingState.binaryPositions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500 italic font-sans">No active binary contracts</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = window.tradingState.binaryPositions.map(b => {
+                const timeLeft = Math.max(0, Math.ceil((b.expiryTime - Date.now()) / 1000));
+                return `
+                <tr class="hover:bg-dark-700/30">
+                    <td class="py-1.5 font-bold text-white">${b.asset}</td>
+                    <td class="py-1.5 ${b.type === 'CALL' ? 'text-emerald-400' : 'text-rose-400'} font-bold">${b.type}</td>
+                    <td class="py-1.5">$${b.amount}</td>
+                    <td class="py-1.5 hidden sm:table-cell">${b.strikePrice.toFixed(5)}</td>
+                    <td class="py-1.5 font-mono">${b.status === 'ACTIVE' ? timeLeft + 's' : 'Expired'}</td>
+                    <td class="py-1.5 font-bold ${b.status === 'WON' ? 'text-emerald-400' : b.status === 'LOST' ? 'text-rose-400' : 'text-amber-400'}">${b.status}</td>
+                </tr>
+            `}).join('');
+        };
+
+        function formatCardNumber(input) {
+            let val = input.value.replace(/\D/g, '').substring(0, 16);
+            input.value = val.match(/.{1,4}/g)?.join(' ') || val;
+        }
+
+        function formatExpiry(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length >= 2) val = val.substring(0, 2) + '/' + val.substring(2, 4);
+            input.value = val;
+        }
+
+        function onMomoCountryChange() {
+            const country = document.getElementById('momoCountry').value;
+            const rates = { KE: { p: '+254', c: 'KES', r: 130 }, TZ: { p: '+255', c: 'TZS', r: 2600 }, UG: { p: '+256', c: 'UGX', r: 3700 }, GH: { p: '+233', c: 'GHS', r: 15.5 }, ZA: { p: '+27', c: 'ZAR', r: 18.5 } };
+            const conf = rates[country] || rates.KE;
+            document.getElementById('momoPrefix').innerText = conf.p;
+            const amt = parseFloat(document.getElementById('mpesaAmount').value) || 50;
+            document.getElementById('momoConvertedTotal').innerText = `${conf.c} ${(amt * conf.r).toLocaleString()}`;
+        }
+
+        function updateCryptoAddress() {
+            const asset = document.getElementById('cryptoAsset').value;
+            const input = document.getElementById('cryptoWalletAddress');
+            const qr = document.getElementById('cryptoQrCode');
+            let addr = "T9xTRC20USDTDepositAddressSimulated99";
+            if (asset === 'usdt_erc20') addr = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+            else if (asset === 'btc') addr = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+            input.value = addr;
+            qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(addr)}`;
+        }
+
+        let tradingChart = null;
+        let marketTimer = null;
+
+        function formatPrice(value, asset = window.tradingState.currentAsset) {
+            const decimals = ASSET_PRICES[asset]?.decimals || 5;
+            return Number(value).toFixed(decimals);
+        }
+
+        function updateForexPositions() {
+            const currentAsset = window.tradingState.currentAsset;
+            const currentPrice = window.tradingState.currentPrice;
+            window.tradingState.forexPositions.forEach(position => {
+                if (position.asset !== currentAsset) return;
+                const direction = position.type === 'BUY' ? 1 : -1;
+                const contractSize = position.asset.includes('JPY') ? 1000 : position.asset.includes('BTC') ? 1 : 100000;
+                position.pl = (currentPrice - position.openPrice) * direction * position.lots * contractSize;
+            });
+        }
+
+        function renderForexPositionsTable() {
+            const tbody = document.getElementById('forexPosTableBody');
+            const countElem = document.getElementById('countForexPos');
+            if (!tbody) return;
+            const positions = window.tradingState.forexPositions;
+            if (countElem) countElem.innerText = positions.length;
+            if (!positions.length) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500 italic font-sans">No active Forex positions</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = positions.map(position => `
+                <tr class="hover:bg-dark-700/30">
+                    <td class="py-1.5 font-bold text-white">${position.asset}</td>
+                    <td class="py-1.5 ${position.type === 'BUY' ? 'text-emerald-400' : 'text-rose-400'} font-bold">${position.type}</td>
+                    <td class="py-1.5">${position.lots.toFixed(2)}</td>
+                    <td class="py-1.5 hidden sm:table-cell">${formatPrice(position.openPrice, position.asset)}</td>
+                    <td class="py-1.5">${formatPrice(position.asset === window.tradingState.currentAsset ? window.tradingState.currentPrice : position.openPrice, position.asset)}</td>
+                    <td class="py-1.5 font-bold ${position.pl >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${position.pl >= 0 ? '+' : ''}${position.pl.toFixed(2)}</td>
+                    <td class="py-1.5 text-right"><button class="close-position-btn text-rose-400 hover:text-rose-300 font-bold" data-id="${position.id}">Close</button></td>
+                </tr>
+            `).join('');
+            tbody.querySelectorAll('.close-position-btn').forEach(button => {
+                button.addEventListener('click', () => closeForexPosition(button.dataset.id));
+            });
+        }
+
+        function closeForexPosition(positionId) {
+            const index = window.tradingState.forexPositions.findIndex(position => position.id === positionId);
+            if (index < 0) return;
+            const [position] = window.tradingState.forexPositions.splice(index, 1);
+            const balanceKey = window.isDemoMode ? 'demoBalance' : 'realBalance';
+            window.tradingState[balanceKey] += position.pl;
+            window.updateBalanceUI();
+            renderForexPositionsTable();
+            window.showToast(`Closed ${position.type} position for ${position.pl >= 0 ? '+' : ''}$${position.pl.toFixed(2)}`, position.pl >= 0 ? 'success' : 'info');
+        }
+
+        function updateLiveQuotesList() {
+            const list = document.getElementById('liveQuotesList');
+            if (!list) return;
+            list.innerHTML = Object.entries(ASSET_PRICES).map(([asset, data]) => {
+                const selected = asset === window.tradingState.currentAsset;
+                const change = ((window.tradingState.currentPrice - data.price) / data.price) * 100;
+                return `<button class="w-full px-3 py-3 text-left hover:bg-dark-800/80 ${selected ? 'bg-blue-500/10 border-l-2 border-blue-500' : ''}" data-quote-asset="${asset}">
+                    <span class="flex justify-between items-center"><span class="font-mono font-bold text-white text-xs">${asset}</span><span class="font-mono text-[10px] ${change >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</span></span>
+                    <span class="block mt-1 font-mono text-[11px] text-gray-400">${formatPrice(asset === window.tradingState.currentAsset ? window.tradingState.currentPrice : data.price, asset)}</span>
+                </button>`;
+            }).join('');
+            list.querySelectorAll('[data-quote-asset]').forEach(button => button.addEventListener('click', () => switchAsset(button.dataset.quoteAsset)));
+        }
+
+        function switchAsset(asset) {
+            if (!ASSET_PRICES[asset]) return;
+            window.tradingState.currentAsset = asset;
+            window.tradingState.currentPrice = ASSET_PRICES[asset].price;
+            document.getElementById('currentAssetPair').innerText = asset;
+            document.getElementById('terminalAssetTitle').innerText = asset;
+            document.getElementById('assetDropdown').classList.add('hidden');
+            updateMarketUI();
+            window.showToast(`Switched to ${asset}`, 'info');
+        }
+
+        function updateMarketUI() {
+            const asset = window.tradingState.currentAsset;
+            const price = window.tradingState.currentPrice;
+            const formatted = formatPrice(price, asset);
+            const spread = ASSET_PRICES[asset].decimals > 3 ? 0.00005 : 0.01;
+            document.getElementById('candC').innerText = formatted;
+            document.getElementById('buyQuoteDisplay').innerText = formatPrice(price + spread, asset);
+            document.getElementById('sellQuoteDisplay').innerText = formatted;
+            document.getElementById('aiTargetAsset').innerText = asset;
+            updateForexPositions();
+            renderForexPositionsTable();
+            renderBinaryPositionsTable();
+            updateLiveQuotesList();
+            if (tradingChart) {
+                tradingChart.data.labels.push(new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }));
+                tradingChart.data.datasets[0].data.push(price);
+                if (tradingChart.data.labels.length > 50) {
+                    tradingChart.data.labels.shift();
+                    tradingChart.data.datasets[0].data.shift();
+                }
+                tradingChart.update('none');
+            }
+            saveState();
+        }
+
+        function initChart() {
+            const canvas = document.getElementById('tradingChartCanvas');
+            if (!canvas || typeof Chart === 'undefined') return;
+            const asset = window.tradingState.currentAsset;
+            const price = window.tradingState.currentPrice;
+            const labels = Array.from({ length: 30 }, (_, index) => `${index + 1}m`);
+            const data = labels.map((_, index) => price + Math.sin(index / 2) * (ASSET_PRICES[asset].step * 4));
+            tradingChart = new Chart(canvas, {
+                type: 'line',
+                data: { labels, datasets: [{ data, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.12)', fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { color: '#9ca3af', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(156, 163, 175, 0.08)' } } } }
+            });
+            clearInterval(marketTimer);
+            marketTimer = setInterval(() => {
+                const settings = ASSET_PRICES[window.tradingState.currentAsset];
+                window.tradingState.currentPrice = Math.max(settings.step, window.tradingState.currentPrice + (Math.random() - 0.5) * settings.step);
+                updateMarketUI();
+            }, 2500);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            initChart();
+            updateLiveQuotesList();
+            window.updateBalanceUI();
+
+            // Setup Dynamic PWA Manifest Blob for mobile installation
+            try {
+                const manifest = {
+                    name: "NexusX Forex & Binary Options Trading Terminal",
+                    short_name: "NexusX",
+                    start_url: ".",
+                    display: "standalone",
+                    background_color: "#07090e",
+                    theme_color: "#07090e"
+                };
+                const stringManifest = JSON.stringify(manifest);
+                const blob = new Blob([stringManifest], {type: 'application/json'});
+                const manifestUrl = URL.createObjectURL(blob);
+                const link = document.createElement('link');
+                link.rel = 'manifest';
+                link.href = manifestUrl;
+                document.head.appendChild(link);
+            } catch(e) {}
+
+            // Mobile Tab Switching Handler
+            const mobileTabs = {
+                Chart: document.getElementById('navTabChart'),
+                Quotes: document.getElementById('navTabQuotes'),
+                Trade: document.getElementById('navTabTrade'),
+                Orders: document.getElementById('navTabOrders'),
+                Ai: document.getElementById('navTabAi')
+            };
+
+            function switchMobileView(viewName) {
+                // Panels
+                const quotesPanel = document.getElementById('mobileQuotesPanel');
+                const chartPanel = document.getElementById('mobileChartPanel');
+                const tradePanel = document.getElementById('mobileTradePanel');
+                const ordersPanel = document.getElementById('mobileOrdersPanel');
+                const aiDrawer = document.getElementById('aiDrawer');
+
+                // Reset Tabs UI
+                Object.values(mobileTabs).forEach(tab => {
+                    if (tab) tab.className = "mobile-nav-item flex flex-col items-center justify-center text-gray-400 hover:text-white space-y-0.5";
+                });
+
+                if (window.innerWidth < 640) {
+                    if (viewName === 'Chart') {
+                        chartPanel?.classList.remove('hidden');
+                        quotesPanel?.classList.add('hidden');
+                        tradePanel?.classList.add('hidden');
+                        aiDrawer?.classList.add('translate-x-full');
+                        mobileTabs.Chart.className = "mobile-nav-item flex flex-col items-center justify-center text-blue-400 space-y-0.5 font-bold";
+                    } else if (viewName === 'Quotes') {
+                        quotesPanel?.classList.remove('hidden');
+                        quotesPanel?.classList.add('flex');
+                        chartPanel?.classList.add('hidden');
+                        tradePanel?.classList.add('hidden');
+                        aiDrawer?.classList.add('translate-x-full');
+                        mobileTabs.Quotes.className = "mobile-nav-item flex flex-col items-center justify-center text-blue-400 space-y-0.5 font-bold";
+                    } else if (viewName === 'Trade') {
+                        tradePanel?.classList.remove('hidden');
+                        tradePanel?.classList.add('flex');
+                        chartPanel?.classList.add('hidden');
+                        quotesPanel?.classList.add('hidden');
+                        aiDrawer?.classList.add('translate-x-full');
+                        mobileTabs.Trade.className = "mobile-nav-item flex flex-col items-center justify-center text-blue-400 space-y-0.5 font-bold";
+                    } else if (viewName === 'Orders') {
+                        chartPanel?.classList.remove('hidden');
+                        quotesPanel?.classList.add('hidden');
+                        tradePanel?.classList.add('hidden');
+                        aiDrawer?.classList.add('translate-x-full');
+                        ordersPanel?.scrollIntoView({ behavior: 'smooth' });
+                        mobileTabs.Orders.className = "mobile-nav-item flex flex-col items-center justify-center text-blue-400 space-y-0.5 font-bold";
+                    } else if (viewName === 'Ai') {
+                        aiDrawer?.classList.remove('translate-x-full');
+                        mobileTabs.Ai.className = "mobile-nav-item flex flex-col items-center justify-center text-purple-400 space-y-0.5 font-bold";
+                    }
+                }
+            }
+
+            mobileTabs.Chart?.addEventListener('click', () => switchMobileView('Chart'));
+            mobileTabs.Quotes?.addEventListener('click', () => switchMobileView('Quotes'));
+            mobileTabs.Trade?.addEventListener('click', () => switchMobileView('Trade'));
+            mobileTabs.Orders?.addEventListener('click', () => switchMobileView('Orders'));
+            mobileTabs.Ai?.addEventListener('click', () => switchMobileView('Ai'));
+
+            // Account Mode Toggle
+            document.getElementById('accountTypeDemoBtn')?.addEventListener('click', () => {
+                window.isDemoMode = true;
+                window.tradingState.isDemoMode = true;
+                document.getElementById('accountTypeDemoBtn').className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-bold text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 transition-all";
+                document.getElementById('accountTypeRealBtn').className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-bold text-xs text-gray-400 hover:text-white transition-all";
+                window.updateBalanceUI();
+                window.showToast("Switched to DEMO Account", "info");
+            });
+
+            document.getElementById('accountTypeRealBtn')?.addEventListener('click', () => {
+                window.isDemoMode = false;
+                window.tradingState.isDemoMode = false;
+                document.getElementById('accountTypeRealBtn').className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-bold text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 transition-all";
+                document.getElementById('accountTypeDemoBtn').className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-bold text-xs text-gray-400 hover:text-white transition-all";
+                window.updateBalanceUI();
+                window.showToast("Switched to REAL Account", "info");
+            });
+
+            // Modal Trigger Listeners
+            document.getElementById('openDepositBtn')?.addEventListener('click', () => document.getElementById('depositModal').classList.remove('hidden'));
+            document.getElementById('openWithdrawBtn')?.addEventListener('click', () => {
+                window.renderWithdrawalHistory();
+                document.getElementById('withdrawModal').classList.remove('hidden');
+            });
+            document.getElementById('openResidencyBtn')?.addEventListener('click', () => {
+                updateRegistrationDashboard();
+                document.getElementById('registrationDashboardModal').classList.remove('hidden');
+            });
+            document.getElementById('openRegistrationFormBtn')?.addEventListener('click', () => {
+                document.getElementById('registrationDashboardModal')?.classList.add('hidden');
+                document.getElementById('residencyModal')?.classList.remove('hidden');
+            });
+            document.getElementById('registrationDashboardDoneBtn')?.addEventListener('click', () => document.getElementById('registrationDashboardModal')?.classList.add('hidden'));
+            document.getElementById('btnWithdrawVerifyNow')?.addEventListener('click', () => {
+                document.getElementById('withdrawModal')?.classList.add('hidden');
+                document.getElementById('registrationDashboardModal')?.classList.remove('hidden');
+            });
+            document.getElementById('userAuthBtn')?.addEventListener('click', () => document.getElementById('authModal').classList.remove('hidden'));
+
+            document.querySelectorAll('.close-modal-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('depositModal')?.classList.add('hidden');
+                    document.getElementById('withdrawModal')?.classList.add('hidden');
+                    document.getElementById('residencyModal')?.classList.add('hidden');
+                    document.getElementById('registrationDashboardModal')?.classList.add('hidden');
+                    document.getElementById('authModal')?.classList.add('hidden');
+                });
+            });
+
+            // Withdrawal Dashboard Tab Switching
+            const withdrawTabRequestBtn = document.getElementById('withdrawTabRequestBtn');
+            const withdrawTabHistoryBtn = document.getElementById('withdrawTabHistoryBtn');
+            const withdrawTabAccountsBtn = document.getElementById('withdrawTabAccountsBtn');
+
+            withdrawTabRequestBtn?.addEventListener('click', () => {
+                withdrawTabRequestBtn.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition";
+                withdrawTabHistoryBtn.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition";
+                withdrawTabAccountsBtn.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition hidden sm:inline-block";
+                document.getElementById('withdrawTabRequest')?.classList.remove('hidden');
+                document.getElementById('withdrawTabHistory')?.classList.add('hidden');
+                document.getElementById('withdrawTabAccounts')?.classList.add('hidden');
+            });
+
+            withdrawTabHistoryBtn?.addEventListener('click', () => {
+                withdrawTabHistoryBtn.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition";
+                withdrawTabRequestBtn.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition";
+                withdrawTabAccountsBtn.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition hidden sm:inline-block";
+                document.getElementById('withdrawTabHistory')?.classList.remove('hidden');
+                document.getElementById('withdrawTabRequest')?.classList.add('hidden');
+                document.getElementById('withdrawTabAccounts')?.classList.add('hidden');
+                window.renderWithdrawalHistory();
+            });
+
+            withdrawTabAccountsBtn?.addEventListener('click', () => {
+                withdrawTabAccountsBtn.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition";
+                withdrawTabRequestBtn.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition";
+                withdrawTabHistoryBtn.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition";
+                document.getElementById('withdrawTabAccounts')?.classList.remove('hidden');
+                document.getElementById('withdrawTabRequest')?.classList.add('hidden');
+                document.getElementById('withdrawTabHistory')?.classList.add('hidden');
+            });
+
+            // Withdrawal Submit Handler
+            document.getElementById('withdrawForm')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const amt = parseFloat(document.getElementById('withdrawAmountInput').value) || 0;
+                const method = document.getElementById('withdrawMethodSelect').value;
+                const currentBal = window.isDemoMode ? window.tradingState.demoBalance : window.tradingState.realBalance;
+
+                if (amt <= 0) {
+                    window.showToast("Please enter a valid withdrawal amount", "error");
+                    return;
+                }
+                if (amt > currentBal) {
+                    window.showToast("Insufficient balance for withdrawal", "error");
+                    return;
+                }
+
+                // Check KYC Limits
+                if (window.tradingState.residencyStatus !== 'VERIFIED' && amt > 1000) {
+                    window.showToast("Unverified residency limit is $1,000. Please complete residency registration.", "error");
+                    document.getElementById('residencyModal')?.classList.remove('hidden');
+                    return;
+                }
+
+                if (window.isDemoMode) window.tradingState.demoBalance -= amt;
+                else window.tradingState.realBalance -= amt;
+
+                if (!window.tradingState.withdrawals) window.tradingState.withdrawals = [];
+                window.tradingState.withdrawals.unshift({
+                    id: 'W-' + Math.floor(100000 + Math.random() * 900000),
+                    date: new Date().toLocaleDateString(),
+                    method: method,
+                    amount: amt,
+                    status: 'PENDING'
+                });
+
+                window.updateBalanceUI();
+                window.renderWithdrawalHistory();
+                window.showToast(`Withdrawal request of $${amt.toFixed(2)} submitted successfully!`, "success");
+            });
+
+            // Residency Verification Form Submission
+            document.getElementById('residencyForm')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const country = document.getElementById('residencyCountry').value;
+                const fullName = document.getElementById('residencyFullName').value;
+                const idNum = document.getElementById('residencyIdNum').value;
+                const address = document.getElementById('residencyAddress').value;
+                const idAttached = Boolean(document.getElementById('simulatedIdUpload').files.length);
+                const addressAttached = Boolean(document.getElementById('simulatedProofUpload').files.length);
+
+                window.tradingState.residencyStatus = 'PENDING';
+                window.tradingState.residencyData = { country, fullName, idNum, address, idAttached, addressAttached, submittedAt: new Date().toISOString() };
+                window.updateBalanceUI();
+
+                document.getElementById('residencyModal')?.classList.add('hidden');
+                window.showToast("Residency registration & ID submitted. Verification pending...", "info");
+
+                // Simulate Auto-Approval after 3 seconds
+                setTimeout(() => {
+                    window.tradingState.residencyStatus = 'VERIFIED';
+                    window.updateBalanceUI();
+                    window.showToast("🎉 Residency & Identity verified successfully! Daily limit raised to $50,000.", "success");
+                }, 3000);
+            });
+
+            // Auth Tab Switching Logic
+            const authTabLoginBtn = document.getElementById('authTabLoginBtn');
+            const authTabSignupBtn = document.getElementById('authTabSignupBtn');
+            const authTabResetBtn = document.getElementById('authTabResetBtn');
+            const authLoginForm = document.getElementById('authLoginForm');
+            const authSignupForm = document.getElementById('authSignupForm');
+            const authResetForm = document.getElementById('authResetForm');
+
+            function showAuthTab(type) {
+                authTabLoginBtn.className = type === 'login' ? "py-1.5 rounded-lg bg-blue-600 text-white font-bold transition" : "py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition";
+                authTabSignupBtn.className = type === 'signup' ? "py-1.5 rounded-lg bg-emerald-600 text-white font-bold transition" : "py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition";
+                authTabResetBtn.className = type === 'reset' ? "py-1.5 rounded-lg bg-purple-600 text-white font-bold transition" : "py-1.5 rounded-lg text-gray-400 hover:text-white font-bold transition";
+
+                authLoginForm?.classList.toggle('hidden', type !== 'login');
+                authSignupForm?.classList.toggle('hidden', type !== 'signup');
+                authResetForm?.classList.toggle('hidden', type !== 'reset');
+            }
+
+            authTabLoginBtn?.addEventListener('click', () => showAuthTab('login'));
+            authTabSignupBtn?.addEventListener('click', () => showAuthTab('signup'));
+            authTabResetBtn?.addEventListener('click', () => showAuthTab('reset'));
+            document.getElementById('linkToResetPass')?.addEventListener('click', () => showAuthTab('reset'));
+
+            // Auth Form Submissions
+            authLoginForm?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                window.tradingState.userEmail = email;
+                window.tradingState.userName = email.split('@')[0];
+                window.updateBalanceUI();
+                document.getElementById('authModal')?.classList.add('hidden');
+                window.showToast(`Logged in successfully as ${email}`, "success");
+            });
+
+            authSignupForm?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('signupEmail').value;
+                const name = document.getElementById('signupName').value.trim();
+                window.tradingState.userEmail = email;
+                window.tradingState.userName = name;
+                window.updateBalanceUI();
+                document.getElementById('authModal')?.classList.add('hidden');
+                window.showToast(`Account created! Welcome to NexusX, ${email}`, "success");
+            });
+
+            authResetForm?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('resetEmail').value;
+                window.showToast(`Password reset authorization email sent to ${email}`, "info");
+                showAuthTab('login');
+            });
+
+            document.getElementById('btnGoogleAuth')?.addEventListener('click', () => {
+                window.tradingState.userEmail = 'google-user@nexusx.demo';
+                window.tradingState.userName = 'Google Trader';
+                window.updateBalanceUI();
+                document.getElementById('authModal')?.classList.add('hidden');
+                window.showToast('Signed in with Google successfully', 'success');
+            });
+
+            document.getElementById('btnGuestAuth')?.addEventListener('click', () => {
+                window.tradingState.userEmail = 'Guest';
+                window.tradingState.userName = '';
+                window.updateBalanceUI();
+                document.getElementById('authModal')?.classList.add('hidden');
+                window.showToast('Continuing in guest demo mode', 'info');
+            });
+            
+            // Asset Selector Dropdown Toggle
+            document.getElementById('assetSelectorBtn')?.addEventListener('click', () => {
+                document.getElementById('assetDropdown')?.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('.asset-option').forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    const sym = e.currentTarget.dataset.symbol;
+                    if (sym) window.switchAsset(sym);
+                });
+            });
+
+            // Trade Mode Switch (Forex vs Binary)
+            document.getElementById('modeForexBtn')?.addEventListener('click', () => {
+                document.getElementById('modeForexBtn').className = "py-2 rounded-lg bg-blue-600 text-white font-extrabold shadow-md transition";
+                document.getElementById('modeBinaryBtn').className = "py-2 rounded-lg text-gray-400 hover:text-white font-extrabold transition";
+                document.getElementById('forexOrderForm')?.classList.remove('hidden');
+                document.getElementById('binaryOrderForm')?.classList.add('hidden');
+            });
+
+            document.getElementById('modeBinaryBtn')?.addEventListener('click', () => {
+                document.getElementById('modeBinaryBtn').className = "py-2 rounded-lg bg-purple-600 text-white font-extrabold shadow-md transition";
+                document.getElementById('modeForexBtn').className = "py-2 rounded-lg text-gray-400 hover:text-white font-extrabold transition";
+                document.getElementById('binaryOrderForm')?.classList.remove('hidden');
+                document.getElementById('forexOrderForm')?.classList.add('hidden');
+            });
+
+            // Deposit Tab Switching
+            document.querySelectorAll('.deposit-tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.deposit-tab-btn').forEach(b => b.className = "deposit-tab-btn py-2 rounded-lg text-gray-400 font-bold hover:text-white");
+                    e.target.className = "deposit-tab-btn py-2 rounded-lg bg-emerald-600 text-slate-950 font-bold";
+                    
+                    const tab = e.target.dataset.tab;
+                    document.getElementById('depositTabCrypto')?.classList.toggle('hidden', tab !== 'crypto');
+                    document.getElementById('depositTabMpesa')?.classList.toggle('hidden', tab !== 'mpesa');
+                    document.getElementById('depositTabCard')?.classList.toggle('hidden', tab !== 'card');
+                });
+            });
+
+            // Deposit Submit Handlers
+            const executeDeposit = (amtVal, method) => {
+                const amt = parseFloat(amtVal);
+                if (isNaN(amt) || amt <= 0) {
+                    window.showToast("Please enter a valid deposit amount", "error");
+                    return;
+                }
+                if (window.isDemoMode) window.tradingState.demoBalance += amt;
+                else window.tradingState.realBalance += amt;
+
+                window.updateBalanceUI();
+                document.getElementById('depositModal')?.classList.add('hidden');
+                playSound('win');
+                window.showToast(`Deposit of $${amt.toFixed(2)} completed via ${method}!`, "success");
+            };
+
+            document.getElementById('btnSubmitMpesaDeposit')?.addEventListener('click', () => executeDeposit(document.getElementById('mpesaAmount').value, 'M-Pesa STK Push'));
+            document.getElementById('btnSubmitCardDeposit')?.addEventListener('click', () => executeDeposit(document.getElementById('cardAmount').value, 'Credit/Debit Card'));
+            document.getElementById('btnSubmitCryptoDeposit')?.addEventListener('click', () => executeDeposit(document.getElementById('depositCryptoAmount').value, 'Crypto Web3'));
+
+            // Forex Execution Buttons
+            document.getElementById('btnBuyForex')?.addEventListener('click', () => {
+                const lots = parseFloat(document.getElementById('forexLotInput').value) || 0.1;
+                const sl = parseFloat(document.getElementById('forexSlInput').value) || null;
+                const tp = parseFloat(document.getElementById('forexTpInput').value) || null;
+
+                window.tradingState.forexPositions.push({
+                    id: 'f_' + Date.now(),
+                    asset: window.tradingState.currentAsset,
+                    type: 'BUY',
+                    lots: lots,
+                    openPrice: window.tradingState.currentPrice,
+                    sl: sl,
+                    tp: tp,
+                    pl: 0
+                });
+                playSound('buy');
+                window.showToast(`Executed BUY ${lots} Lots ${window.tradingState.currentAsset}`, "success");
+                renderForexPositionsTable();
+                saveState();
+            });
+
+            document.getElementById('btnSellForex')?.addEventListener('click', () => {
+                const lots = parseFloat(document.getElementById('forexLotInput').value) || 0.1;
+                const sl = parseFloat(document.getElementById('forexSlInput').value) || null;
+                const tp = parseFloat(document.getElementById('forexTpInput').value) || null;
+
+                window.tradingState.forexPositions.push({
+                    id: 'f_' + Date.now(),
+                    asset: window.tradingState.currentAsset,
+                    type: 'SELL',
+                    lots: lots,
+                    openPrice: window.tradingState.currentPrice,
+                    sl: sl,
+                    tp: tp,
+                    pl: 0
+                });
+                playSound('sell');
+                window.showToast(`Executed SELL ${lots} Lots ${window.tradingState.currentAsset}`, "success");
+                renderForexPositionsTable();
+                saveState();
+            });
+
+            // Binary Execution Buttons
+            document.getElementById('btnCallBinary')?.addEventListener('click', () => {
+                const amt = parseFloat(document.getElementById('binaryAmountInput').value) || 50;
+                const secs = parseInt(document.getElementById('binaryExpirySelect').value) || 60;
+                const bal = window.isDemoMode ? window.tradingState.demoBalance : window.tradingState.realBalance;
+
+                if (amt > bal) {
+                    window.showToast("Insufficient account balance!", "error");
+                    return;
+                }
+
+                if (window.isDemoMode) window.tradingState.demoBalance -= amt;
+                else window.tradingState.realBalance -= amt;
+
+                window.tradingState.binaryPositions.push({
+                    id: 'b_' + Date.now(),
+                    asset: window.tradingState.currentAsset,
+                    type: 'CALL',
+                    amount: amt,
+                    strikePrice: window.tradingState.currentPrice,
+                    expiryTime: Date.now() + (secs * 1000),
+                    status: 'ACTIVE'
+                });
+
+                window.updateBalanceUI();
+                renderBinaryPositionsTable();
+                playSound('buy');
+                window.showToast(`Placed CALL Binary Contract ($${amt})`, "success");
+            });
+
+            document.getElementById('btnPutBinary')?.addEventListener('click', () => {
+                const amt = parseFloat(document.getElementById('binaryAmountInput').value) || 50;
+                const secs = parseInt(document.getElementById('binaryExpirySelect').value) || 60;
+                const bal = window.isDemoMode ? window.tradingState.demoBalance : window.tradingState.realBalance;
+
+                if (amt > bal) {
+                    window.showToast("Insufficient account balance!", "error");
+                    return;
+                }
+
+                if (window.isDemoMode) window.tradingState.demoBalance -= amt;
+                else window.tradingState.realBalance -= amt;
+
+                window.tradingState.binaryPositions.push({
+                    id: 'b_' + Date.now(),
+                    asset: window.tradingState.currentAsset,
+                    type: 'PUT',
+                    amount: amt,
+                    strikePrice: window.tradingState.currentPrice,
+                    expiryTime: Date.now() + (secs * 1000),
+                    status: 'ACTIVE'
+                });
+
+                window.updateBalanceUI();
+                renderBinaryPositionsTable();
+                playSound('sell');
+                window.showToast(`Placed PUT Binary Contract ($${amt})`, "success");
+            });
+
+            // Binary Investment Input Profit Update
+            document.getElementById('binaryAmountInput')?.addEventListener('input', (e) => {
+                const amt = parseFloat(e.target.value) || 0;
+                const profitDisplay = document.getElementById('binaryProfitDisplay');
+                if (profitDisplay) profitDisplay.innerText = `+$${(amt * 0.85).toFixed(2)}`;
+            });
+
+            // AI Drawer Toggles
+            document.getElementById('toggleAiDrawerBtn')?.addEventListener('click', () => {
+                document.getElementById('aiDrawer')?.classList.toggle('translate-x-full');
+            });
+            document.getElementById('closeAiDrawerBtn')?.addEventListener('click', () => {
+                document.getElementById('aiDrawer')?.classList.add('translate-x-full');
+            });
+
+            // AI Neural Audit Analysis simulation
+            document.getElementById('btnRunAiAnalysis')?.addEventListener('click', () => {
+                const spinner = document.getElementById('aiLoadingSpinner');
+                const result = document.getElementById('aiAnalysisResult');
+                if (spinner) spinner.classList.remove('hidden');
+                if (result) result.classList.add('hidden');
+
+                setTimeout(() => {
+                    if (spinner) spinner.classList.add('hidden');
+                    if (result) result.classList.remove('hidden');
+
+                    const isBullish = Math.random() > 0.4;
+                    const badge = document.getElementById('aiSignalBadge');
+                    const suggested = document.getElementById('aiSuggestedAction');
+                    const reasoning = document.getElementById('aiReasoningText');
+
+                    if (badge) {
+                        badge.innerText = isBullish ? 'BULLISH' : 'BEARISH';
+                        badge.className = isBullish ? "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold font-mono" : "px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold font-mono";
+                    }
+                    if (suggested) {
+                        suggested.innerText = isBullish ? 'BUY CALL / LONG' : 'SELL PUT / SHORT';
+                        suggested.className = isBullish ? "font-bold text-emerald-400 font-mono" : "font-bold text-rose-400 font-mono";
+                    }
+                    if (reasoning) {
+                        reasoning.innerText = isBullish 
+                            ? "Bullish continuation pattern formed above SMA(20). Multi-timeframe momentum oscillator confirms positive velocity."
+                            : "Overbought rejection detected near local resistance level. Selling momentum accelerating on 1m timeframe.";
+                    }
+                }, 1200);
+            });
+
+            // Bottom Panel Tab Switchers
+            document.getElementById('tabForexPos')?.addEventListener('click', () => {
+                document.getElementById('panelForexPos')?.classList.remove('hidden');
+                document.getElementById('panelBinaryPos')?.classList.add('hidden');
+                document.getElementById('panelTransactions')?.classList.add('hidden');
+            });
+            document.getElementById('tabBinaryPos')?.addEventListener('click', () => {
+                document.getElementById('panelBinaryPos')?.classList.remove('hidden');
+                document.getElementById('panelForexPos')?.classList.add('hidden');
+                document.getElementById('panelTransactions')?.classList.add('hidden');
+            });
+            document.getElementById('tabTransactions')?.addEventListener('click', () => {
+                document.getElementById('panelTransactions')?.classList.remove('hidden');
+                document.getElementById('panelForexPos')?.classList.add('hidden');
+                document.getElementById('panelBinaryPos')?.classList.add('hidden');
+            });
+
+            // Reset Session
+            document.getElementById('btnLogout')?.addEventListener('click', () => {
+                localStorage.removeItem(STORAGE_KEY);
+                window.location.reload();
+            });
+
+            if ((window.tradingState.userEmail || 'Guest') === 'Guest') {
+                document.getElementById('authModal')?.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
+
