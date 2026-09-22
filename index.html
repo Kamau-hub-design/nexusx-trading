@@ -1005,6 +1005,34 @@
             } catch(e) {}
         }
 
+        async function apiRequest(action, payload = null) {
+            const options = { credentials: 'same-origin', headers: {} };
+            if (payload !== null) {
+                options.method = 'POST';
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(payload);
+            }
+            const response = await fetch(`api.php?action=${encodeURIComponent(action)}`, options);
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Backend request failed.');
+            return result;
+        }
+
+        function applyBackendState(serverState) {
+            if (!serverState) return;
+            window.tradingState.userEmail = serverState.user?.email || 'Guest';
+            window.tradingState.userName = serverState.user?.name || '';
+            if (serverState.balances) {
+                window.tradingState.demoBalance = serverState.balances.DEMO;
+                window.tradingState.realBalance = serverState.balances.REAL;
+            }
+            if (serverState.residency) {
+                window.tradingState.residencyStatus = serverState.residency.status;
+                window.tradingState.residencyData = serverState.residency.data;
+            }
+            window.updateBalanceUI();
+        }
+
         window.tradingState = loadState();
         window.isDemoMode = window.tradingState.isDemoMode;
 
@@ -1614,25 +1642,33 @@
             document.getElementById('linkToResetPass')?.addEventListener('click', () => showAuthTab('reset'));
 
             // Auth Form Submissions
-            authLoginForm?.addEventListener('submit', (e) => {
+            authLoginForm?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('loginEmail').value;
-                window.tradingState.userEmail = email;
-                window.tradingState.userName = email.split('@')[0];
-                window.updateBalanceUI();
-                document.getElementById('authModal')?.classList.add('hidden');
-                window.showToast(`Logged in successfully as ${email}`, "success");
+                const password = document.getElementById('loginPass').value;
+                try {
+                    const result = await apiRequest('login', { email, password });
+                    applyBackendState(result.state);
+                    document.getElementById('authModal')?.classList.add('hidden');
+                    window.showToast(`Logged in successfully as ${email}`, "success");
+                } catch (error) {
+                    window.showToast(error.message, "error");
+                }
             });
 
-            authSignupForm?.addEventListener('submit', (e) => {
+            authSignupForm?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('signupEmail').value;
                 const name = document.getElementById('signupName').value.trim();
-                window.tradingState.userEmail = email;
-                window.tradingState.userName = name;
-                window.updateBalanceUI();
-                document.getElementById('authModal')?.classList.add('hidden');
-                window.showToast(`Account created! Welcome to NexusX, ${email}`, "success");
+                const password = document.getElementById('signupPass').value;
+                try {
+                    const result = await apiRequest('signup', { name, email, password });
+                    applyBackendState(result.state);
+                    document.getElementById('authModal')?.classList.add('hidden');
+                    window.showToast(`Account created! Welcome to NexusX, ${name}`, "success");
+                } catch (error) {
+                    window.showToast(error.message, "error");
+                }
             });
 
             authResetForm?.addEventListener('submit', (e) => {
