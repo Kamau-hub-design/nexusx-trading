@@ -479,10 +479,10 @@
                     </div>
 
                     <div>
-                        <label class="block text-gray-400 mb-1">Phone Number</label>
+                        <label class="block text-gray-400 mb-1">Safaricom Phone Number</label>
                         <div class="flex gap-2">
                             <span id="momoPrefix" class="bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 font-mono text-gray-300">+254</span>
-                            <input type="tel" id="momoPhone" placeholder="712345678" class="flex-1 bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
+                            <input type="tel" id="momoPhone" placeholder="712345678" autocomplete="tel" inputmode="numeric" class="flex-1 bg-dark-950 border border-gray-800 rounded-xl px-3 py-2 text-white font-mono">
                         </div>
                     </div>
 
@@ -497,6 +497,7 @@
                     </div>
 
                     <button id="btnSubmitMpesaDeposit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl shadow-lg transition">Send STK Push Request</button>
+                    <p class="text-[10px] text-gray-500 text-center">A Daraja payment prompt will appear on this Safaricom line. Funds are credited after confirmation.</p>
                 </div>
 
                 <!-- 2. CARD PAYMENT GATEWAY -->
@@ -1012,7 +1013,7 @@
                 options.headers['Content-Type'] = 'application/json';
                 options.body = JSON.stringify(payload);
             }
-            const response = await fetch(`api.php?action=${encodeURIComponent(action)}`, options);
+            const response = await fetch(`/api?action=${encodeURIComponent(action)}`, options);
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Backend request failed.');
             return result;
@@ -1750,7 +1751,49 @@
                 window.showToast(`Deposit of $${amt.toFixed(2)} completed via ${method}!`, "success");
             };
 
-            document.getElementById('btnSubmitMpesaDeposit')?.addEventListener('click', () => executeDeposit(document.getElementById('mpesaAmount').value, 'M-Pesa STK Push'));
+            async function submitMpesaStkPush() {
+                const amountUsd = parseFloat(document.getElementById('mpesaAmount')?.value);
+                const rawPhone = String(document.getElementById('momoPhone')?.value || '').replace(/\D/g, '');
+                const phoneNumber = rawPhone.startsWith('0') ? `254${rawPhone.slice(1)}` : rawPhone.startsWith('7') ? `254${rawPhone}` : rawPhone;
+                const amountKes = Math.round(amountUsd * 130);
+                const button = document.getElementById('btnSubmitMpesaDeposit');
+
+                if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+                    window.showToast('Please enter a valid deposit amount', 'error');
+                    return;
+                }
+                if (!/^2547\d{8}$/.test(phoneNumber)) {
+                    window.showToast('Enter a valid Safaricom number, for example 0712345678', 'error');
+                    return;
+                }
+
+                button.disabled = true;
+                button.textContent = 'Sending STK Push...';
+                try {
+                    const result = await apiRequest('mpesa_stk_push', { amount: amountKes, phone_number: phoneNumber });
+                    document.getElementById('depositModal')?.classList.add('hidden');
+                    window.showToast(`STK Push sent. Approve KES ${amountKes.toLocaleString()} on ${phoneNumber}.`, 'success');
+                    let previousBalance = window.tradingState.realBalance;
+                    for (let attempt = 0; attempt < 6; attempt += 1) {
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        const state = await apiRequest('state');
+                        applyBackendState(state);
+                        if (window.tradingState.realBalance > previousBalance) {
+                            playSound('win');
+                            window.showToast('M-Pesa deposit confirmed and credited to your REAL account.', 'success');
+                            break;
+                        }
+                    }
+                    return result;
+                } catch (error) {
+                    window.showToast(error.message || 'Unable to send STK Push.', 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Send STK Push Request';
+                }
+            }
+
+            document.getElementById('btnSubmitMpesaDeposit')?.addEventListener('click', submitMpesaStkPush);
             document.getElementById('btnSubmitCardDeposit')?.addEventListener('click', () => executeDeposit(document.getElementById('cardAmount').value, 'Credit/Debit Card'));
             document.getElementById('btnSubmitCryptoDeposit')?.addEventListener('click', () => executeDeposit(document.getElementById('depositCryptoAmount').value, 'Crypto Web3'));
 

@@ -1,10 +1,11 @@
 {
   "name": "new-folder-(9)",
   "version": "1.0.0",
-  "description": "The backend is `api.php`. It uses PHP sessions and SQLite, so no external database server is required.",
-  "main": "index.js",
+  "description": "NexusX trading terminal with a Node.js backend.",
+  "main": "backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node backend/server.js",
+    "test": "node --check backend/server.js && node --check backend/database.js && node --check backend/daraja.js"
   },
   "repository": {
     "type": "git",
@@ -24,7 +25,7 @@
     "dotenv": "^18.0.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.10",
     "pg": "^8.23.0"
-  },
-  "devDependencies": {}
+  }
 }
