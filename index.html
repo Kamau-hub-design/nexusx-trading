@@ -76,6 +76,47 @@
             50% { opacity: 0.4; }
         }
         .animate-pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
+
+        /* Keep the terminal usable on narrow phone screens without changing the desktop layout. */
+        @media (max-width: 639px) {
+            html, body { min-width: 0; max-width: 100%; }
+            body { overflow: hidden; }
+
+            header {
+                min-height: calc(3.5rem + env(safe-area-inset-top, 0px));
+                height: auto;
+                gap: 0.5rem;
+                overflow: hidden;
+            }
+            header > div:first-child,
+            header > div:last-child { min-width: 0; }
+            header > div:first-child { flex: 1 1 auto; overflow: hidden; }
+            header > div:last-child {
+                flex: 0 1 auto;
+                max-width: 58%;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+            header > div:last-child::-webkit-scrollbar { display: none; }
+            #assetSelectorBtn { max-width: 8.5rem; }
+            #currentAssetPair { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            #currentAssetBadge { display: none; }
+
+            main { min-height: 0; }
+            #mobileChartPanel { min-width: 0; min-height: 0; }
+            #mobileChartPanel > div:first-child { min-width: 0; }
+            #mobileChartPanel > div:first-child > div:first-child { min-width: 0; }
+            #mobileChartPanel > div:first-child > div:last-child { flex-shrink: 0; }
+            #mobileChartPanel > div:nth-child(2) { min-height: 0; }
+            #mobileOrdersPanel { height: 11.5rem; min-height: 11.5rem; }
+            #mobileOrdersPanel > div:last-child { overflow-x: auto; }
+            #mobileOrdersPanel table { min-width: 31rem; }
+
+            .fixed.inset-0 { padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px)); }
+            .fixed.inset-0 > div { max-height: 100%; border-radius: 1rem; }
+            #aiDrawer { padding-top: max(1rem, env(safe-area-inset-top, 0px)); padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px)); }
+            nav.sm\:hidden { padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)); height: calc(3.5rem + env(safe-area-inset-bottom, 0px)); }
+        }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col antialiased select-none bg-dark-950 text-gray-100">
