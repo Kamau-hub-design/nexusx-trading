@@ -1,7 +1,7 @@
 {
   "name": "new-folder-(9)",
   "version": "1.0.0",
-  "description": "",
+  "description": "The backend is `api.php`. It uses PHP sessions and SQLite, so no external database server is required.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,5 +25,6 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.0"
-  }
+  },
+  "devDependencies": {}
 }
